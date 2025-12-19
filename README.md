@@ -1,5 +1,5 @@
-# Smart Hostel Grievance Analyzer — Day 2
-## Multilingual Text Processing & Embedding Service
+# Smart Hostel Grievance Analyzer
+## AI-powered Multilingual Hostel Complaint Intelligence System
 
 ## 📌 Purpose
 
@@ -30,32 +30,52 @@ Preprocessing is intentionally lightweight:
 
 Aggressive NLP steps (stemming, stopwords, grammar correction) are avoided to preserve meaning in code-mixed text.
 
+## 📈 Project Progress
+
+- ✅ Day 1: Project foundation & service architecture
+- ✅ Day 2: Multilingual text processing & embeddings
+- ✅ Day 3: Semantic complaint classification with confidence scoring
+
 ## 📁 Project Structure
 ```bash
 ai-service/
 │
 ├── app/
-│   ├── main.py                # FastAPI entry point
-│   ├── config.py              # Model & service config
+│   ├── main.py                          # FastAPI entry point & API routes
+│   ├── config.py                        # Service & model configuration
 │   │
 │   ├── preprocessing/
-│   │   └── text_cleaner.py    # Text normalization logic
+│   │   ├── __init__.py
+│   │   └── text_cleaner.py              # Text normalization & Hinglish handling
 │   │
 │   ├── embeddings/
-│   │   └── embedder.py        # Multilingual embedding model
+│   │   ├── __init__.py
+│   │   └── embedder.py                  # Multilingual sentence embedding model
+│   │
+│   ├── classification/
+│   │   ├── category_anchors.py          # Hostel complaint anchor definitions
+│   │   └── similarity_classifier.py     # Anchor-based semantic classifier
 │   │
 │   ├── services/
-│   │   └── embedding_service.py
+│   │   ├── __init__.py
+│   │   ├── embedding_service.py         # Embedding generation service
+│   │   └── classification_service.py    # Complaint classification orchestration
 │   │
 │   └── utils/
-│       └── logger.py
+│       ├── __init__.py
+│       └── logger.py                    # Centralized logging utility
+│
+├── data/
+│   ├── hostel_complaints_multilingual_v1.csv
+│   └── hostel_complaints_with_embeddings.csv
 │
 ├── scripts/
-│   └── generate_embeddings.py # Batch embedding generator
+│   ├── generate_embeddings.py           # Batch embedding generation
+│   └── test_classification.py           # Local classification testing script
 │
-├── data/                      # Dataset folder (create this)
-│   └── hostel_complaints_multilingual_v1.csv
-│
+├── venv/                                # Virtual environment (local)
+├── .env.example                         # Environment variable template
+├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
@@ -80,7 +100,7 @@ mkdir data
 # Copy your dataset to: ai-service/data/hostel_complaints_multilingual_v1.csv
 ```
 
-## ▶️ Running Day 2 Pipeline
+## ▶️ Running the AI Service
 
 ### Option A: Batch Processing (Recommended)
 ```bash
@@ -100,7 +120,8 @@ After running the batch script, a new file is created:
 data/hostel_complaints_with_embeddings.csv
 ```
 
-Each complaint now contains a semantic embedding vector (512 dimensions).
+Each complaint now contains a semantic embedding vector (512 dimensions),
+which is later used for category classification and confidence scoring.
 
 ## 🔧 API Usage
 
@@ -154,3 +175,31 @@ curl http://localhost:8000/health
         paraphrase-multilingual-MiniLM-L12-v2 (384-dim, lighter)
 
         l3cube-pune/hindi-sentence-similarity-sbert (Hindi-focused)
+
+## 🧠 Day 3 — Semantic Classification Engine
+
+### What was added
+- Anchor-based complaint classification
+- Cosine similarity scoring
+- Confidence-aware predictions
+- Hostel-specific complaint categories
+
+### Supported Categories
+- Water
+- Electricity
+- Internet
+- Hygiene
+- Mess / Food
+- Infrastructure
+- Noise
+- Safety / Security
+- Administration
+- Others
+
+### Output Example
+```json
+{
+  "category": "Water",
+  "confidence": 0.63
+}
+```
