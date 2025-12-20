@@ -1,0 +1,24 @@
+{
+  "complaints": [
+    {
+      "text": "No water supply in BH-3 since morning",
+      "hostel": "BH-3"
+    },
+    {
+      "text": "Paani nahi aa raha BH-3 me subah se",
+      "hostel": "BH-3"
+    },
+    {
+      "text": "Water problem in BH-3",
+      "hostel": "BH-3"
+    },
+    {
+      "text": "Electricity cut in GH-1",
+      "hostel": "GH-1"
+    },
+    {
+      "text": "Bijli chali gayi GH-1 me",
+      "hostel": "GH-1"
+    }
+  ]
+}

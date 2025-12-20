@@ -1,205 +1,234 @@
-# Smart Hostel Grievance Analyzer
-## AI-powered Multilingual Hostel Complaint Intelligence System
+# 🏫 AI-Powered Hostel Complaint & Issue Aggregation System
 
-## 📌 Purpose
+An intelligent backend system that **classifies, prioritizes, aggregates, and deduplicates hostel complaints** using NLP and semantic similarity.
 
-This service forms the AI foundation of the Smart Hostel Grievance Analyzer. Its responsibility is to convert hostel complaints written in English, Hindi, and Hinglish into a shared semantic vector representation, which is later used for classification, similarity detection, and trend analysis.
+Designed for **high precision, explainability, and predictable behavior**, this system converts raw complaints into **actionable issues** for administration.
 
-## 🧠 Key Design Decisions
+---
 
-### 1. No Translation-Based Pipeline
-- Complaints are **not** translated to a single language
-- Translation introduces semantic drift and fails for Hinglish
-- Instead, multilingual embeddings are used to preserve meaning
+## 🚀 Project Status
 
-### 2. Multilingual Semantic Embeddings
-- All complaints are mapped into a single vector space
-- Complaints with similar meaning lie close together, regardless of language
+- ✅ Day 1–2: Text preprocessing & embeddings
+- ✅ Day 3: Category classification (semantic anchors)
+- ✅ Day 4: Urgency detection (4 levels)
+- ✅ Day 5: Issue aggregation & duplicate detection (**stable**)
 
-**Example:**
-- `"No water supply in hostel"`
-- `"Paani nahi aa raha hostel me"`
+> **Current Scope:** English-only complaints (by design)
 
-→ produce nearby embeddings.
+---
 
-### 3. Minimal & Controlled Preprocessing
-Preprocessing is intentionally lightweight:
-- Lowercasing
-- Whitespace normalization
-- Small Hinglish normalization dictionary
+## 🎯 Core Capabilities
 
-Aggressive NLP steps (stemming, stopwords, grammar correction) are avoided to preserve meaning in code-mixed text.
+### 1️⃣ Complaint Classification
+Each complaint is classified into:
+- **Category** (Water, Electricity, Internet, Hygiene, Mess, Administration, etc.)
+- **Urgency** (LOW, MEDIUM, HIGH, CRITICAL)
+- **Expected response time**
 
-## 📈 Project Progress
+Powered by **semantic anchor embeddings**, not keyword matching.
 
-- ✅ Day 1: Project foundation & service architecture
-- ✅ Day 2: Multilingual text processing & embeddings
-- ✅ Day 3: Semantic complaint classification with confidence scoring
+---
 
-## 📁 Project Structure
-```bash
-ai-service/
-│
-├── app/
-│   ├── main.py                          # FastAPI entry point & API routes
-│   ├── config.py                        # Service & model configuration
-│   │
-│   ├── preprocessing/
-│   │   ├── __init__.py
-│   │   └── text_cleaner.py              # Text normalization & Hinglish handling
-│   │
-│   ├── embeddings/
-│   │   ├── __init__.py
-│   │   └── embedder.py                  # Multilingual sentence embedding model
-│   │
-│   ├── classification/
-│   │   ├── category_anchors.py          # Hostel complaint anchor definitions
-│   │   └── similarity_classifier.py     # Anchor-based semantic classifier
-│   │
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── embedding_service.py         # Embedding generation service
-│   │   └── classification_service.py    # Complaint classification orchestration
-│   │
-│   └── utils/
-│       ├── __init__.py
-│       └── logger.py                    # Centralized logging utility
-│
-├── data/
-│   ├── hostel_complaints_multilingual_v1.csv
-│   └── hostel_complaints_with_embeddings.csv
-│
-├── scripts/
-│   ├── generate_embeddings.py           # Batch embedding generation
-│   └── test_classification.py           # Local classification testing script
-│
-├── venv/                                # Virtual environment (local)
-├── .env.example                         # Environment variable template
-├── .gitignore
-├── requirements.txt
-└── README.md
+### 2️⃣ Issue Aggregation (Day 5)
+
+Multiple complaints are intelligently grouped into a single **Issue** when:
+- Hostel matches (hard rule)
+- Category matches (hard rule)
+- Semantic similarity is high enough
+
+Each issue tracks:
+- Total complaints
+- Unique complaints
+- Duplicate complaints
+- Max & average urgency
+- Last updated timestamp
+
+---
+
+### 3️⃣ Duplicate Detection (High Precision)
+
+- Uses sentence embeddings + cosine similarity
+- **Threshold: `0.88` (validated)**
+- Duplicate ≠ Same issue  
+  (A complaint can belong to the same issue but still be unique)
+
+| Similarity Score | Meaning |
+|------------------|--------|
+| ≥ 0.88 | Strong duplicate |
+| 0.70–0.87 | Same issue, different wording |
+| < 0.70 | Related but unique |
+
+---
+
+## 🌐 Language Scope (Current Version)
+
+### 🔤 English-Only Input (Intentional)
+
+The system is **explicitly scoped to English** to guarantee reliable duplicate detection.
+
+#### Why?
+- Hinglish & multilingual text reduce embedding similarity (≈0.3–0.4)
+- English-only ensures similarity > 0.6 for true semantic matches
+- No silent translation errors
+- Predictable aggregation behavior
+
+---
+
+### 🚫 What is rejected?
+- Hindi (Devanagari) script
+- Heavy Hinglish usage
+
+#### Example (Rejected):
+```json
+❌ "Paani nahi aa raha BH-3 me"
 ```
 
-## ⚙️ Setup Instructions
-
-### 1. Create virtual environment
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+#### Accepted:
+```json
+✅ "No water supply in BH-3 since morning"
 ```
 
-### 2. Install dependencies
-```bash
-pip install -r requirements.txt
+---
+
+## 🔍 English Scope Validation
+
+Implemented via EnglishValidator:
+
+- Rejects Hindi script
+- Detects Hinglish patterns
+- Requires minimum English content
+- Allows hostel names & technical terms
+
+### Future Roadmap
+
+Includes:
+
+- Explicit translation endpoint
+- Hinglish normalization layer
+- Multilingual routing
+
+---
+
+## 🧠 System Architecture (Simplified)
+
+```
+Complaint
+   ↓
+Language Validation
+   ↓
+Text Preprocessing
+   ↓
+Category Classification
+   ↓
+Urgency Detection
+   ↓
+Issue Aggregation
+   ↓
+Duplicate Detection
+   ↓
+Issue Statistics
 ```
 
-### 3. Prepare dataset
-```bash
-# Create data folder and place your CSV there
-mkdir data
-# Copy your dataset to: ai-service/data/hostel_complaints_multilingual_v1.csv
+---
+
+---
+
+## 📦 API Overview (Day 5)
+
+### Submit Complaint
+
+```
+POST /complaints/
 ```
 
-## ▶️ Running the AI Service
-
-### Option A: Batch Processing (Recommended)
-```bash
-python scripts/generate_embeddings.py
-```
-
-### Option B: Start API Service
-```bash
-python -m app.main
-```
-
-## Output
-
-After running the batch script, a new file is created:
-
-```bash
-data/hostel_complaints_with_embeddings.csv
-```
-
-Each complaint now contains a semantic embedding vector (512 dimensions),
-which is later used for category classification and confidence scoring.
-
-## 🔧 API Usage
-
-Note: API endpoints are provided for early integration testing. Core Day 2 validation is done via batch embedding.
-
-Once the service is running, you can generate embeddings via HTTP:
-
-### Single Text Embedding
-```bash
-curl -X POST "http://localhost:8000/embed" \
-  -H "Content-Type: application/json" \
-  -d '{"text": "No water supply in hostel", "normalize_hinglish": true}'
-```
-
-### Batch Embedding
-```bash
-curl -X POST "http://localhost:8000/embed/batch" \
-  -H "Content-Type: application/json" \
-  -d '{"texts": ["No water supply", "Paani nahi aa raha"], "batch_size": 32}'
-```
-
-### Check Service Health
-```bash
-curl http://localhost:8000/health
-```
-
-## 🚀 Features
-
-    Multilingual Support: Handle English, Hindi, and Hinglish text seamlessly
-
-    Semantic Preservation: Maintain original meaning across languages
-
-    Scalable: Batch processing for large datasets
-
-    Lightweight: Minimal preprocessing for fast operation
-
-    API-Ready: REST endpoints for integration with Node.js backend
-
-## 📊 Model Details
-
-    Current Model: sentence-transformers/distiluse-base-multilingual-cased-v2
-
-    Chosen for stronger multilingual robustness over lighter MiniLM.
-
-    Embedding Dimension: 512-dimensional vectors
-
-    Language Support: 50+ languages including Hindi-English code-mixing
-
-    Alternative Models (configurable):
-
-        paraphrase-multilingual-MiniLM-L12-v2 (384-dim, lighter)
-
-        l3cube-pune/hindi-sentence-similarity-sbert (Hindi-focused)
-
-## 🧠 Day 3 — Semantic Classification Engine
-
-### What was added
-- Anchor-based complaint classification
-- Cosine similarity scoring
-- Confidence-aware predictions
-- Hostel-specific complaint categories
-
-### Supported Categories
-- Water
-- Electricity
-- Internet
-- Hygiene
-- Mess / Food
-- Infrastructure
-- Noise
-- Safety / Security
-- Administration
-- Others
-
-### Output Example
 ```json
 {
-  "category": "Water",
-  "confidence": 0.63
+  "text": "No water supply in BH-3 since morning",
+  "hostel": "BH-3"
 }
 ```
+
+### Batch Submission
+
+```
+POST /complaints/batch
+```
+
+### System Stats
+
+```
+GET /issues/stats/system
+```
+
+### Scope Info
+
+```
+GET /scope
+```
+
+---
+
+## 📊 Example System Statistics
+
+```json
+{
+  "total_issues": 4,
+  "total_complaints": 7,
+  "unique_complaints": 5,
+  "duplicate_rate": 0.28,
+  "duplicate_threshold": 0.88,
+  "consistency_checks": {
+    "cross_hostel_attempts": 0,
+    "cross_category_attempts": 0,
+    "consistent": true
+  }
+}
+```
+
+---
+
+## 🧪 Testing
+
+All Day-5 functionality is covered by:
+
+```bash
+python scripts/test_day5.py
+```
+
+Includes:
+
+- English scope validation
+- Duplicate accuracy
+- Issue aggregation
+- Edge cases
+- API health checks
+
+---
+
+## 🛠️ Tech Stack
+
+- Python 3.10+
+- FastAPI
+- Sentence Transformers
+- scikit-learn
+- In-memory issue store (Day 5)
+- Modular service architecture
+
+---
+
+## 📌 Design Philosophy
+
+- Rules before ML
+- Precision over recall
+- Explainability > magic
+- Deterministic behavior
+- Production-safe defaults
+
+---
+
+## 🔮 Next Phase (Day 6)
+
+- Issue lifecycle (open → resolved)
+- Persistence layer (DB)
+- Escalation rules
+- SLA tracking
