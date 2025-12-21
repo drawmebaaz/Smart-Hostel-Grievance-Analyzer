@@ -758,6 +758,8 @@ CREATE TABLE complaints (
 Here's how the admin dashboard looks in action:
 
 ![Smart Grievance Admin Dashboard](./images/1.png)
+![Smart Grievance Admin Dashboard](./images/2.png)
+![Smart Grievance Admin Dashboard](./images/3.png)
 
 **Dashboard Features:**
 - Real-time KPI cards (Active Issues, Critical Issues, SLA Risk, Total Complaints)
