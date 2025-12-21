@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
 from datetime import datetime
 import uvicorn
+from app.services.issue_service_day7a import get_issue_service_day7a
 
 from app.config import SERVICE_NAME, SERVICE_VERSION, API_PORT
 from app.services.embedding_service import get_embedding_service
@@ -303,9 +304,12 @@ async def submit_complaint(payload: ComplaintRequest):
     IMPORTANT: English text required for reliable duplicate detection.
     """
     try:
-        result = issue_service.process_complaint(
+        # Use Day 7A service instead of Day 6
+        service = get_issue_service_day7a()
+        
+        result = service.process_complaint(
             text=payload.text,
-            hostel=payload.hostel,
+            hostel=payload.hostel,  
             complaint_id=payload.complaint_id,
             metadata=payload.metadata
         )

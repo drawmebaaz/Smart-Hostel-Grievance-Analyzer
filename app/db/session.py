@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 Database session management
-Day 6.1 - Engine and session factory
+Day 6.1 & 7A - Engine and session factory with constraint enforcement
 """
 
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
 from typing import Generator
@@ -27,6 +27,16 @@ engine = create_engine(
     pool_size=5,
     max_overflow=10
 )
+
+# Day 7A: Enable SQLite constraints
+if "sqlite" in DATABASE_URL:
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.execute("PRAGMA journal_mode=WAL")  # Better concurrency
+        cursor.close()
+        logger.debug("SQLite pragmas enabled: foreign_keys, WAL mode")
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
