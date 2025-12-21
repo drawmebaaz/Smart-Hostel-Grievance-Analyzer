@@ -11,6 +11,9 @@ from typing import List, Dict, Any
 from datetime import datetime
 import uvicorn
 from app.services.issue_service_day7a import get_issue_service_day7a
+from app.middleware.request_context import RequestContextMiddleware
+from app.api.observability import router as observability_router
+
 
 from app.config import SERVICE_NAME, SERVICE_VERSION, API_PORT
 from app.services.embedding_service import get_embedding_service
@@ -82,6 +85,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestContextMiddleware)
+app.include_router(observability_router)
 
 # ==================== HEALTH & INFO ENDPOINTS ====================
 
