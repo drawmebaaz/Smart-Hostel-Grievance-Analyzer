@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply transition-colors duration-200;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white min-h-screen;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* ===== Glassmorphism Cards ===== */
+  .card {
+    @apply bg-slate-800/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-cyan-500/20 p-6 transition-all duration-300 hover:bg-slate-800/80 hover:border-cyan-500/40 hover:shadow-cyan-500/10;
+  }
+  
+  .card-premium {
+    @apply bg-gradient-to-br from-slate-800/80 to-slate-900/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-400/30 p-6 transition-all duration-300 hover:from-slate-800/95 hover:to-slate-800/80 hover:border-blue-400/50 hover:shadow-2xl hover:shadow-blue-500/20;
+  }
+  
+  /* ===== Stat Card ===== */
+  .stat-card {
+    @apply bg-gradient-to-br from-slate-800/70 to-slate-900/50 backdrop-blur-lg rounded-xl shadow-lg border border-cyan-400/25 p-5 transition-all duration-300 hover:from-slate-800/90 hover:to-slate-900/70 hover:border-cyan-400/50 hover:shadow-2xl hover:shadow-cyan-500/15;
+  }
+  
+  /* ===== Badges ===== */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border transition-all duration-200 whitespace-nowrap;
+  }
+  
+  /* ===== Buttons ===== */
+  .btn {
+    @apply px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 backdrop-blur-sm border disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-500 hover:to-cyan-500 shadow-lg hover:shadow-blue-500/50 focus:ring-blue-400 border border-blue-400/40;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-700/80 text-white hover:bg-slate-600 focus:ring-cyan-400 border border-cyan-400/30 hover:border-cyan-400/50;
+  }
+  
+  .btn-icon {
+    @apply p-2.5 rounded-lg bg-slate-700/60 hover:bg-slate-600 border border-cyan-400/25 hover:border-cyan-400/50 transition-all duration-200 flex items-center justify-center;
+  }
+  
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-lg hover:shadow-red-500/50 focus:ring-red-400 border border-red-400/40;
+  }
+
+  .btn-success {
+    @apply bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-500 hover:to-emerald-500 shadow-lg hover:shadow-green-500/50 focus:ring-green-400 border border-green-400/40;
+  }
+  
+  /* ===== Section Headers ===== */
+  .section-header {
+    @apply text-white font-bold text-2xl mb-6 flex items-center gap-3;
+  }
+  
+  .section-header::before {
+    @apply content-[''] w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full;
+  }
+  
+  /* ===== Input Fields ===== */
+  input, textarea, select {
+    @apply bg-slate-800/60 border border-cyan-400/30 rounded-lg backdrop-blur-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400 transition-all duration-200;
+  }
+
+  input::placeholder, textarea::placeholder {
+    @apply text-slate-400;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    @apply bg-slate-800/80 border-cyan-400 shadow-lg shadow-cyan-500/20;
+  }
+  
+  /* ===== Background Gradient ===== */
+  .gradient-bg {
+    @apply bg-gradient-to-br from-cyan-600/20 to-blue-600/20 backdrop-blur-sm;
+  }
+  
+  /* ===== Glassmorphism Overlay ===== */
+  .glass-overlay {
+    @apply fixed inset-0 bg-black/40 backdrop-blur-sm;
+  }
+
+  /* ===== Tables ===== */
+  table {
+    @apply w-full;
+  }
+
+  thead {
+    @apply border-b border-cyan-400/20;
+  }
+
+  th {
+    @apply px-6 py-3 text-left text-xs font-semibold text-cyan-300 uppercase tracking-wider;
+  }
+
+  td {
+    @apply px-6 py-4 border-b border-slate-700/50;
+  }
+
+  /* ===== Loading & Animations ===== */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .animate-pulse-glow {
+    @apply animate-pulse;
+  }
+
+  .animate-skeleton {
+    @apply bg-gradient-to-r from-slate-800 to-slate-700 animate-pulse rounded;
+  }
+
+  /* ===== Scrollbar Styling ===== */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900/50;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-cyan-500/40 rounded hover:bg-cyan-500/60 transition-colors;
+  }
+
+  /* ===== Selection ===== */
+  ::selection {
+    @apply bg-cyan-500/50 text-white;
+  }
+
+  /* ===== Utility Classes ===== */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .absolute-center {
+    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .text-truncate {
+    @apply overflow-hidden text-overflow ellipsis whitespace-nowrap;
+  }
+
+  .text-shadow-sm {
+    @apply drop-shadow-sm;
+  }
+
+  .text-shadow {
+    @apply drop-shadow;
+  }
+
+  /* ===== Responsive Utilities ===== */
+  .max-w-content {
+    @apply max-w-7xl;
+  }
+
+  /* ===== Dark Mode Optimizations ===== */
+  body {
+    color-scheme: dark;
+  }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  body {
+    @apply bg-white text-gray-900;
+  }
+
+  .card, .card-premium, .btn {
+    @apply bg-white border-gray-300;
+  }
+}
+
+/* Add these to the end of the file */
+
+/* Improved color palette */
+:root {
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;  /* gray-300 */
+  --text-tertiary: #9ca3af;   /* gray-400 */
+}
+
+/* Replace opacity-based text with semantic classes */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+/* Ensure focus states are visible */
+:focus-visible {
+  outline: 2px solid #60a5fa;  /* blue-400 */
+  outline-offset: 2px;
+}
+
+/* Improve disabled state contrast */
+.disabled\:opacity-50 {
+  opacity: 0.7 !important;  /* From 0.5 to 0.7 */
+}
