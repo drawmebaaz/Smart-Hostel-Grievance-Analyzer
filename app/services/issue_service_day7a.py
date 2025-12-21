@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Issue Service - Day 7A + 7B Complete
+Enhanced issue Service - Day 7A + 7B Complete
 Adds: Transaction safety, failure handling, graceful degradation + Observability
 """
 
@@ -174,6 +174,9 @@ class IssueServiceDay7A:
             trace.mark("db_transaction_start")
             db_start = time.perf_counter()
             
+            # FIXED: Store issue_snapshot here to avoid DetachedInstanceError
+            issue_snapshot = None
+            
             try:
                 with get_db_context() as db:
                     issue_repo = IssueRepository(db)
@@ -211,6 +214,9 @@ class IssueServiceDay7A:
                     )
                     trace.mark("issue_update_complete")
                     
+                    # FIXED: Create snapshot before session closes
+                    issue_snapshot = self._create_issue_snapshot(issue, is_new_issue)
+                    
                     # Transaction commits automatically
                     
                 # Day 7B.2: Track DB latency
@@ -221,7 +227,7 @@ class IssueServiceDay7A:
                 logger.info(
                     "db_transaction_completed",
                     complaint_id=complaint_id,
-                    issue_id=issue.id,
+                    issue_id=issue_snapshot["id"],
                     latency_ms=round(db_latency, 2)
                 )
                 trace.mark("db_transaction_complete")
@@ -260,7 +266,7 @@ class IssueServiceDay7A:
             self.session_manager.register_complaint(
                 session_id=session_id,
                 complaint_id=complaint_id,
-                issue_id=issue.id,
+                issue_id=issue_snapshot["id"],
                 category=category,
                 urgency=urgency,
                 similarity_score=similarity_score,
@@ -271,7 +277,7 @@ class IssueServiceDay7A:
             # Heuristic evaluation
             trace.mark("heuristics_start")
             heuristics = self._evaluate_heuristics_safe(
-                session, issue.id, urgency, is_duplicate,
+                session, issue_snapshot["id"], urgency, is_duplicate,
                 similarity_score, start_time, complaint_id, degradation_flags
             )
             trace.mark("heuristics_complete")
@@ -290,25 +296,25 @@ class IssueServiceDay7A:
             else:
                 metrics.counter("complaint_unique_total").inc()
             
-            if is_new_issue:
+            if issue_snapshot["is_new_issue"]:
                 metrics.counter("issue_created_total").inc()
             
             # Day 7B.1: Success log
             logger.info(
                 "complaint_processed_successfully",
                 complaint_id=complaint_id,
-                issue_id=issue.id,
+                issue_id=issue_snapshot["id"],
                 category=category,
                 urgency=urgency,
                 is_duplicate=is_duplicate,
-                is_new_issue=is_new_issue,
+                is_new_issue=issue_snapshot["is_new_issue"],
                 processing_time_ms=round(processing_time_ms, 2)
             )
             
             trace.mark("complaint_processing_complete")
             
             return self._build_success_response(
-                complaint_id, text, classification, issue, is_new_issue,
+                complaint_id, text, classification, issue_snapshot,
                 is_duplicate, similarity_score, session, session_id,
                 heuristics, metadata, hostel, start_time, 
                 processing_time, degradation_flags
@@ -327,6 +333,30 @@ class IssueServiceDay7A:
             )
             
             return self._generic_error_response(complaint_id, text, start_time, str(e))
+
+    def _create_issue_snapshot(self, issue: IssueModel, is_new_issue: bool) -> Dict[str, Any]:
+        """
+        Create a snapshot of issue data before session closes.
+        Prevents DetachedInstanceError when accessing ORM attributes later.
+        """
+        # FIXED: Handle status as string (not enum)
+        status_value = issue.status
+        if hasattr(status_value, 'value'):
+            status_value = status_value.value
+        elif isinstance(status_value, IssueStatus):
+            status_value = status_value.value
+        
+        return {
+            "id": issue.id,
+            "complaint_count": issue.complaint_count,
+            "unique_complaint_count": issue.unique_complaint_count,
+            "urgency_max": issue.urgency_max,
+            "urgency_avg": issue.urgency_avg,
+            "hostel": issue.hostel,
+            "category": issue.category,
+            "status": status_value,  # FIXED: Now handles both string and enum
+            "is_new_issue": is_new_issue
+        }
     
     # ==================== Day 7A.4: Graceful Degradation ====================
     
@@ -645,11 +675,26 @@ class IssueServiceDay7A:
     # ==================== Response Builders ====================
     
     def _build_success_response(
-        self, complaint_id, text, classification, issue, is_new_issue,
-        is_duplicate, similarity_score, session, session_id, heuristics,
-        metadata, hostel, start_time, processing_time, degradation_flags
-    ) -> Dict:
-        """Build successful response with degradation info"""
+        self,
+        complaint_id: str,
+        text: str,
+        classification: Dict[str, Any],
+        issue_snapshot: Dict[str, Any],
+        is_duplicate: bool,
+        similarity_score: Optional[float],
+        session: Any,
+        session_id: str,
+        heuristics: Dict[str, Any],
+        metadata: Dict[str, Any],
+        hostel: str,
+        start_time: datetime,
+        processing_time: float,
+        degradation_flags: Dict[str, bool]
+    ) -> Dict[str, Any]:
+        """
+        Build successful response using issue snapshot instead of ORM object.
+        This prevents DetachedInstanceError.
+        """
         return {
             "success": True,
             "processing_time_seconds": round(processing_time, 3),
@@ -663,15 +708,15 @@ class IssueServiceDay7A:
                 "response_time_hours": classification.get("response_time_hours", 24)
             },
             "issue_aggregation": {
-                "status": "new_issue_created" if is_new_issue else "added_to_existing",
-                "issue_id": issue.id,
+                "status": "new_issue_created" if issue_snapshot["is_new_issue"] else "added_to_existing",
+                "issue_id": issue_snapshot["id"],
                 "is_new_complaint": not is_duplicate,
                 "is_duplicate": is_duplicate,
                 "similarity_score": round(similarity_score, 4) if similarity_score else None,
-                "complaint_count": issue.complaint_count,
-                "unique_complaint_count": issue.unique_complaint_count,
-                "urgency_max": issue.urgency_max,
-                "urgency_avg": round(issue.urgency_avg, 2)
+                "complaint_count": issue_snapshot["complaint_count"],
+                "unique_complaint_count": issue_snapshot["unique_complaint_count"],
+                "urgency_max": issue_snapshot["urgency_max"],
+                "urgency_avg": round(issue_snapshot["urgency_avg"], 2)
             },
             "session": {
                 "session_id": session_id,
