@@ -2,7 +2,7 @@
 
 An intelligent, production-grade backend system that **classifies, prioritizes, aggregates, and deduplicates hostel complaints** using NLP and semantic similarity.
 
-**Status**: Days 1-7a Complete | **Language Scope**: English-only (intentional)
+**Status**: Days 1-7b Complete | **Language Scope**: English-only (intentional)
 
 ---
 
@@ -105,6 +105,7 @@ app/
 ├── config.py                  # Configuration constants
 ├── api/
 │   ├── schemas.py            # Pydantic request/response models
+│   ├── observability.py      # Observability endpoints (Day 7B)
 │   ├── routes/
 │   │   ├── complaints.py     # Complaint endpoints
 │   │   └── issues.py         # Issue endpoints
@@ -134,10 +135,17 @@ app/
 │   ├── urgency_service.py
 │   ├── issue_service.py      # Original (Day 5)
 │   ├── issue_service_day6.py # With sessions & heuristics
-│   └── issue_service_day7a.py # With DB integrity + locking
+│   └── issue_service_day7a.py # With DB integrity + observability
 ├── core/                      # Day 6+ core features
 │   ├── session.py            # Session management
 │   └── heuristics.py         # Follow-up/escalation/noise detection
+├── observability/            # Day 7B observability stack
+│   ├── logger.py             # Structured logging (7B.1)
+│   ├── metrics.py            # Metrics instrumentation (7B.2)
+│   ├── trace.py              # Request tracing (7B.3)
+│   └── context.py            # Request context (request_id, etc)
+├── middleware/               # Day 7B middleware
+│   └── request_context.py    # Request context injection
 ├── metrics/                   # Performance tracking
 │   └── system_metrics.py     # Request/error/heuristic metrics
 ├── issues/                    # Day 5 issue logic
@@ -148,7 +156,7 @@ app/
 │   ├── urgency_rules.py      # Urgency scoring
 │   └── validators.py         # Input validation
 └── utils/
-    └── logger.py             # Logging setup
+    └── logger.py             # Logging setup (legacy)
 
 scripts/
 ├── init_db.py                # Database initialization
@@ -163,7 +171,7 @@ data/
 └── hostel_complaints_*.csv   # Sample data
 
 requirements.txt              # Python dependencies
-README.md                      # This file
+README.md                     # This file
 ```
 
 ---
@@ -205,6 +213,10 @@ README.md                      # This file
 ### Embeddings (Advanced)
 - `POST /embed` - Generate embedding
 - `POST /embed/batch` - Batch embeddings
+
+### Observability (Day 7B)
+- `GET /observability/metrics` - Get all system metrics (counters, gauges, histograms)
+- `GET /observability/health` - Health check with key metrics and error rate
 
 ### Debug
 - `POST /debug/similarity` - Debug similarity between texts
@@ -323,6 +335,7 @@ CREATE TABLE complaints (
 | 5 | Issue aggregation, duplicate detection (0.88 threshold) | ✅ Complete |
 | 6 | SQLite persistence, session management, heuristics (follow-up/escalation/noise) | ✅ Complete |
 | 7a | Database constraints, foreign keys, row-level locking, 13 performance indexes | ✅ Complete |
+| 7b | Structured logging (7B.1), metrics instrumentation (7B.2), request tracing (7B.3) | ✅ Complete |
 
 ---
 
@@ -453,16 +466,77 @@ result = validate_english_scope("complaint text")
 
 ---
 
-## 🚀 Deployment
+## � Day 7B - Observability Stack
+
+Day 7B adds comprehensive observability with structured logging, metrics, and request tracing.
+
+### 7B.1 - Structured Logging
+- **Format**: JSON-based, machine-readable logs
+- **Correlation**: Every log includes `request_id` for request tracking
+- **Event-oriented**: Named events instead of unstructured text
+- **Fields**: `timestamp`, `level`, `event`, `source`, `request_id`, custom fields
+
+**Example Log**:
+```json
+{
+  "timestamp": "2025-12-21T10:30:45.123Z",
+  "level": "INFO",
+  "event": "complaint_processed",
+  "source": "issue_service_day7a",
+  "request_id": "req-abc123",
+  "complaint_id": "COMP-xyz",
+  "issue_id": "ISSUE-123",
+  "processing_time_ms": 245
+}
+```
+
+### 7B.2 - Metrics Instrumentation
+- **Counters**: Total request counts, errors, specific features
+- **Gauges**: Current active sessions, queue depth
+- **Histograms**: Latency distributions, percentiles
+- **Endpoint**: `GET /observability/metrics` returns all metrics
+
+**Key Metrics**:
+- `complaint_received_total` - All complaints received
+- `issue_created_total` - New issues created
+- `duplicate_detected_total` - Duplicates found
+- `http_requests_total` - All HTTP requests
+- `http_errors_total` - Failed requests
+- `http_request_latency_ms` - Response time distribution
+- `database_query_latency_ms` - DB operation latency
+- `embedding_generation_time_ms` - Embedding compute time
+
+### 7B.3 - Request Tracing
+- **Trace context**: Carries `request_id` through entire request lifecycle
+- **Spans**: Mark significant operations (embedding, classification, DB)
+- **Middleware**: Automatically injects context on every request
+- **Debugging**: Trace failed requests end-to-end
+
+**Example Usage**:
+```python
+# Context automatically available everywhere
+from app.observability.context import get_request_id
+
+request_id = get_request_id()  # Returns: req-abc123
+
+# Logs automatically include request_id
+logger.info("operation_completed", duration_ms=100)
+# Output: {..., "request_id": "req-abc123", ...}
+```
+
+---
+
+## �🚀 Deployment
 
 ### Production Checklist
 - [ ] Database backed up (`data/hostel_grievance.db`)
 - [ ] Use PostgreSQL for concurrent writes (not SQLite)
 - [ ] Set `CORS allow_origins` to specific domain
 - [ ] Enable HTTPS in reverse proxy
-- [ ] Monitor `/health` endpoint
-- [ ] Set up logs rotation (`app/utils/logger.py`)
-- [ ] Test `/admin/metrics` for system health
+- [ ] Monitor `/health` and `/observability/health` endpoints
+- [ ] Set up log aggregation (ELK, Datadog, etc)
+- [ ] Test `/observability/metrics` for system metrics
+- [ ] Configure log shipping for JSON logs
 
 ### Docker Example
 ```dockerfile
@@ -482,8 +556,9 @@ CMD ["python", "-m", "app.main"]
 
 - **English-only scope is intentional** for duplicate detection precision
 - **Database file**: `data/hostel_grievance.db` (auto-created)
-- **No authentication** (add via auth middleware if needed)
-- **In-memory sessions**: Can swap to Redis
+- **Structured logging** includes request correlation for debugging
+- **Metrics available** via `/observability/metrics` endpoint
+
 - **SQLite suitable for**: Single process, < 10 concurrent writes; use PostgreSQL otherwise
 - **All metrics thread-safe**: Uses Python locks
 
